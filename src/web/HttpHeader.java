@@ -4,7 +4,7 @@ package web;
  * <h1>HTTP Header</h1> This class represents a http header.
  * 
  * @author NikosSiak
- * @version 1.0
+ * @version 1.0.1
  */
 public class HttpHeader {
 
@@ -12,6 +12,8 @@ public class HttpHeader {
     private String host;
     private String filePath;
     private boolean keepAlive;
+    private String returnCode;
+    private String date;
 
     /**
      * Constructs a HttpHeader object with given values.
@@ -26,14 +28,61 @@ public class HttpHeader {
     public HttpHeader(String method, String host, String filePath, String keepAlive) {
         this.method = method;
         this.host = host;
-        if (!this.host.endsWith("/")) {
-            this.host += "/";
-        }
         this.filePath = filePath;
-        if (!this.filePath.endsWith("/")) {
-            this.filePath += "/";
-        }
         this.keepAlive = keepAlive.equals("keep-alive");
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (this.method.contains("HTTP")) {
+            stringBuilder.append(this.method).append(" ");
+            stringBuilder.append(this.returnCode).append("\r\n");
+            stringBuilder.append(this.date).append("\r\n");
+            stringBuilder.append("\r\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Empty constructor
+     * 
+     * @since 1.0.1
+     */
+    public HttpHeader() {
+        
+    }
+
+    /**
+     * @return The http return code of this header
+     * @since 1.0.1
+     */
+    public String getReturnCode() {
+        return returnCode;
+    }
+
+    /**
+     * @param returnCode The http return code of this header
+     * @since 1.0.1
+     */
+    public void setReturnCode(String returnCode) {
+        this.returnCode = returnCode;
+    }
+
+    /**
+     * @return The string representation of the date this header was created
+     * @since 1.0.1
+     */
+    public String getDate() {
+        return date;
+    }
+
+    /**
+     * @param date The string representation of the date this header was created
+     * @since 1.0.1
+     */
+    public void setDate(String date) {
+        this.date = date;
     }
 
     /**
@@ -66,9 +115,6 @@ public class HttpHeader {
      */
     public void setHost(String host) {
         this.host = host;
-        if (!this.host.endsWith("/")) {
-            this.host += "/";
-        }
     }
 
     /**
@@ -85,9 +131,6 @@ public class HttpHeader {
      */
     public void setFilePath(String filePath) {
         this.filePath = filePath;
-        if (!this.filePath.endsWith("/")) {
-            this.filePath += "/";
-        }
     }
 
     /**
