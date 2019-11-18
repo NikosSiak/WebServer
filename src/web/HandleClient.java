@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -17,7 +19,7 @@ import java.util.Map;
  * <h1>Handle Client</h1> Responds to requests made by a client.
  * 
  * @author NikosSiak
- * @version 1.0.1
+ * @version 1.1
  */
 class HandleClient implements Runnable {
 
@@ -88,31 +90,25 @@ class HandleClient implements Runnable {
      * Creates a http response for GET requests
      * 
      * @param request The GET request from the client
-     * @return The response message
-     * @since 1.0.1
+     * @return The response message as bytes
+     * @since 1.0.1 Text files only
+     * @since 1.1 Binary file support
      */
-    private String handleGetRequest(HttpHeader request) {
+    private byte[] handleGetRequest(HttpHeader request) {
+        // TODO add support for utf-8
         HttpHeader responseHeader = new HttpHeader();
         String path = rootFolder + request.getHost() + request.getFilePath();
         if (request.getFilePath().endsWith("/")) {
             path += "index.html";
         }
-        String fileContents = "";
 
-        // TODO: add a check if the file is text or binary
+        byte[] fileContents = null;
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
+            InputStream reader = new FileInputStream(path);
             responseHeader.setReturnCode(OK);
 
             try {
-                StringBuilder stringBuilder = new StringBuilder();
-                String line = reader.readLine();
-                while (line != null) {
-                    stringBuilder.append(line).append("\n");
-                    line = reader.readLine();
-                }
-                fileContents = stringBuilder.toString();
-
+                fileContents = Files.readAllBytes(Paths.get(path));
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -127,9 +123,11 @@ class HandleClient implements Runnable {
         responseHeader.setDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss")));
         responseHeader.setMethod(HTTP);
 
-        String message = responseHeader.toString();
-        if (!fileContents.isEmpty()) {
-            message += fileContents;
+        byte[] header = responseHeader.toString().getBytes();
+        byte[] message = new byte[header.length + fileContents.length];
+        if (fileContents != null) {
+            System.arraycopy(header, 0, message, 0, header.length);
+            System.arraycopy(fileContents, 0, message, header.length, fileContents.length);
         }
         return message;
     }
@@ -141,9 +139,8 @@ class HandleClient implements Runnable {
      * @return The response that needs to be send to the client
      * @since 1.0.1
      */
-    String handleRequest(HttpHeader request) {
-        // HttpHeader response = new HttpHeader();
-        String message;
+    byte[] handleRequest(HttpHeader request) {
+        byte[] message;
         switch (request.getMethod()) {
         case GET:
             message = handleGetRequest(request);
@@ -162,8 +159,8 @@ class HandleClient implements Runnable {
      * @throws IOException
      * @since 1.0.1
      */
-    void sendResponse(OutputStream out, String response) throws IOException {
-        out.write(response.getBytes());
+    void sendResponse(OutputStream out, byte[] response) throws IOException {
+        out.write(response);
     }
 
     /**
@@ -178,7 +175,7 @@ class HandleClient implements Runnable {
             OutputStream socketOut = this.clientSocket.getOutputStream();
             try {
                 HttpHeader httpRequest = getRequest(socketIn);
-                String message = handleRequest(httpRequest);
+                byte[] message = handleRequest(httpRequest);
                 sendResponse(socketOut, message);
             } catch (IOException e) {
                 e.printStackTrace();
