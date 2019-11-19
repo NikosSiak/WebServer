@@ -4,7 +4,7 @@ package web;
  * <h1>HTTP Header</h1> This class represents a http header.
  * 
  * @author NikosSiak
- * @version 1.0.1
+ * @version 1.0.2
  */
 public class HttpHeader {
 
@@ -14,6 +14,12 @@ public class HttpHeader {
     private boolean keepAlive;
     private String returnCode;
     private String date;
+    private String contentType;
+    private String charset;
+
+    private final String NEW_LINE = "\r\n";
+    private final String HTTP = "HTTP";
+    private final String GET = "GET";
 
     /**
      * Constructs a HttpHeader object with given values.
@@ -35,11 +41,35 @@ public class HttpHeader {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        if (this.method.contains("HTTP")) {
+        if (this.method.contains(HTTP)) {
             stringBuilder.append(this.method).append(" ");
-            stringBuilder.append(this.returnCode).append("\r\n");
-            stringBuilder.append(this.date).append("\r\n");
-            stringBuilder.append("\r\n");
+            if (this.returnCode != null) {
+                stringBuilder.append(this.returnCode).append(NEW_LINE);
+            }
+            if (this.date != null) {
+                stringBuilder.append("Date: ").append(this.date).append(NEW_LINE);
+            }
+            if (this.contentType != null) {
+                stringBuilder.append("Content-Type: ").append(this.contentType);
+                if (this.charset != null) {
+                    stringBuilder.append("; ").append("charset=").append(this.charset).append(NEW_LINE);
+                } else {
+                    stringBuilder.append(NEW_LINE);
+                }
+            }
+            stringBuilder.append(NEW_LINE);
+        } else if (this.method.contains(GET)) {
+            stringBuilder.append(this.method);
+            if (this.filePath != null) {
+                stringBuilder.append(" ").append(this.filePath);
+            }
+            stringBuilder.append(NEW_LINE);
+            if (this.host != null) {
+                stringBuilder.append("Host: ").append(this.host).append(NEW_LINE);
+            }
+            if (this.keepAlive) {
+                stringBuilder.append("Connection: keep-alive").append(NEW_LINE);
+            }
         }
         return stringBuilder.toString();
     }
@@ -54,11 +84,43 @@ public class HttpHeader {
     }
 
     /**
+     * @return The The content type of the message this header is part of
+     * @since 1.0.2
+     */
+    public String getContentType() {
+        return this.contentType;
+    }
+
+    /**
+     * @param contentType The The content type of the message this header is part of
+     * @since 1.0.2
+     */
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    /**
+     * @return The charset of the message this header is part of
+     * @since 1.0.2
+     */
+    public String getCharset() {
+        return this.charset;
+    }
+
+    /**
+     * @param charset The charset of the message this header is part of
+     * @since 1.0.2
+     */
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
+
+    /**
      * @return The http return code of this header
      * @since 1.0.1
      */
     public String getReturnCode() {
-        return returnCode;
+        return this.returnCode;
     }
 
     /**
@@ -74,7 +136,7 @@ public class HttpHeader {
      * @since 1.0.1
      */
     public String getDate() {
-        return date;
+        return this.date;
     }
 
     /**
