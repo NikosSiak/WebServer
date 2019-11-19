@@ -37,6 +37,9 @@ class HandleClient implements Runnable {
     private final String OK = "200 OK";
     private final String NOT_FOUND = "404 Not Found";
 
+    private final String TEXT_HTML = "text/html";
+    private final String UTF8 = "utf-8";
+
     /**
      * Creates a HandleClient object that handles the client connected to the
      * specified {@link java.net.Socket Socket}.
@@ -95,7 +98,6 @@ class HandleClient implements Runnable {
      * @since 1.1 Binary file support
      */
     private byte[] handleGetRequest(HttpHeader request) {
-        // TODO add support for utf-8
         HttpHeader responseHeader = new HttpHeader();
         String path = rootFolder + request.getHost() + request.getFilePath();
         if (request.getFilePath().endsWith("/")) {
@@ -122,14 +124,20 @@ class HandleClient implements Runnable {
 
         responseHeader.setDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss")));
         responseHeader.setMethod(HTTP);
+        if (path.endsWith(".html")) {
+            responseHeader.setContentType(TEXT_HTML);
+            responseHeader.setCharset(UTF8);
+        }
 
         byte[] header = responseHeader.toString().getBytes();
-        byte[] message = new byte[header.length + fileContents.length];
         if (fileContents != null) {
+            byte[] message = new byte[header.length + fileContents.length];
             System.arraycopy(header, 0, message, 0, header.length);
             System.arraycopy(fileContents, 0, message, header.length, fileContents.length);
+
+            return message;
         }
-        return message;
+        return header;
     }
 
     /**
